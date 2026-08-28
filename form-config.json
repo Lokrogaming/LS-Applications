@@ -1,0 +1,71 @@
+{
+  "title": "Bewerbung — LS Elyntara & Projekte",
+  "description": "Du willst Teil des Netzwerks werden? Erzähl uns, wer du bist und wo du mitwirken möchtest.",
+  "submitLabel": "Bewerbung absenden",
+  "successMessage": "Danke für deine Bewerbung! Wir melden uns so schnell wie möglich bei dir.",
+  "fields": [
+    {
+      "id": "name",
+      "label": "Vollständiger Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Max Mustermann"
+    },
+    {
+      "id": "email",
+      "label": "E-Mail-Adresse",
+      "type": "email",
+      "required": true,
+      "placeholder": "max@beispiel.de"
+    },
+    {
+      "id": "discord",
+      "label": "Discord-Username",
+      "type": "text",
+      "required": false,
+      "placeholder": "z. B. name#0000 oder @name"
+    },
+    {
+      "id": "alter",
+      "label": "Alter",
+      "type": "number",
+      "required": false,
+      "placeholder": ""
+    },
+    {
+      "id": "bereich",
+      "label": "Für welchen Bereich bewirbst du dich?",
+      "type": "select",
+      "required": true,
+      "options": ["Entwicklung", "Design", "Community-Management", "Content & Social Media", "Sonstiges"]
+    },
+    {
+      "id": "erfahrung",
+      "label": "Wie schätzt du dein Erfahrungslevel ein?",
+      "type": "radio",
+      "required": true,
+      "options": ["Anfänger", "Fortgeschritten", "Profi"]
+    },
+    {
+      "id": "faehigkeiten",
+      "label": "Welche Fähigkeiten bringst du mit?",
+      "type": "checkbox",
+      "required": false,
+      "options": ["Programmierung", "UI/UX-Design", "Community-Betreuung", "Grafik & Video", "Texten"]
+    },
+    {
+      "id": "motivation",
+      "label": "Warum möchtest du bei LS Elyntara mitmachen?",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "Erzähl uns kurz von deiner Motivation ..."
+    },
+    {
+      "id": "zeit",
+      "label": "Wie viel Zeit kannst du ungefähr pro Woche einbringen?",
+      "type": "text",
+      "required": false,
+      "placeholder": "z. B. 3-5 Stunden"
+    }
+  ]
+}
