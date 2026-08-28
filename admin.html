@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Bewerbungs-Builder — LS Elyntara</title>
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          brand: { DEFAULT: '#0877F9', light: '#4DA3FF', dim: '#0A3A7A' },
+          ink: { 950: '#05070D', 900: '#0A0E17', 800: '#111826', 700: '#1B2333' },
+          slate: { 300: '#B4BCCC', 500: '#7B8496' }
+        },
+        fontFamily: {
+          display: ['"Space Grotesk"', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'monospace'],
+          body: ['"Inter"', 'sans-serif'],
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  body { background: #05070D; }
+  .field-input {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  .field-input:focus {
+    outline: none; border-color: #0877F9;
+    box-shadow: 0 0 0 3px rgba(8,119,249,0.18);
+  }
+  .card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: #1B2333; border-radius: 4px; }
+  input[type=checkbox] { accent-color: #0877F9; }
+  ::selection { background: #0877F9; color: #05070D; }
+</style>
+</head>
+<body class="min-h-screen text-white font-body">
+
+<div class="min-h-screen flex flex-col">
+
+  <!-- Topbar -->
+  <header class="border-b border-white/10 bg-ink-900/80 backdrop-blur-sm sticky top-0 z-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
+      <div class="flex items-center gap-3">
+        <span class="w-2 h-2 rounded-full bg-brand"></span>
+        <h1 class="font-display font-semibold text-lg tracking-tight">Bewerbungs-Builder</h1>
+        <span class="font-mono text-[10px] tracking-[0.2em] text-slate-500 uppercase hidden sm:inline">LS Elyntara Admin</span>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <label class="cursor-pointer font-mono text-xs px-3.5 py-2 rounded-lg border border-white/10 text-slate-300 hover:border-brand/50 hover:text-white transition-colors">
+          JSON importieren
+          <input type="file" id="import-input" accept="application/json" class="hidden">
+        </label>
+        <button id="copy-btn" class="font-mono text-xs px-3.5 py-2 rounded-lg border border-white/10 text-slate-300 hover:border-brand/50 hover:text-white transition-colors">
+          JSON kopieren
+        </button>
+        <button id="export-btn" class="font-mono text-xs px-3.5 py-2 rounded-lg bg-brand hover:bg-brand-light transition-colors text-white font-medium">
+          form-config.json herunterladen
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-8">
+
+    <!-- ===== Linke Spalte: Builder ===== -->
+    <div class="flex flex-col gap-8">
+
+      <!-- Allgemeine Einstellungen -->
+      <section class="card rounded-2xl p-5 sm:p-6 flex flex-col gap-4">
+        <h2 class="font-display font-semibold text-sm tracking-wide text-brand-light uppercase">Allgemein</h2>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">Titel</label>
+          <input id="cfg-title" class="field-input w-full rounded-lg px-3.5 py-2.5 text-sm" type="text">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">Beschreibung</label>
+          <textarea id="cfg-description" rows="2" class="field-input w-full rounded-lg px-3.5 py-2.5 text-sm resize-none"></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5">Button-Text</label>
+            <input id="cfg-submitLabel" class="field-input w-full rounded-lg px-3.5 py-2.5 text-sm" type="text">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5">Erfolgsmeldung</label>
+            <input id="cfg-successMessage" class="field-input w-full rounded-lg px-3.5 py-2.5 text-sm" type="text">
+          </div>
+        </div>
+      </section>
+
+      <!-- Felderliste -->
+      <section class="card rounded-2xl p-5 sm:p-6 flex flex-col gap-4">
+        <div class="flex items-center justify-between">
+          <h2 class="font-display font-semibold text-sm tracking-wide text-brand-light uppercase">Felder</h2>
+          <span id="field-count" class="font-mono text-xs text-slate-500">0 Felder</span>
+        </div>
+        <div id="fields-list" class="flex flex-col gap-3"></div>
+        <p id="empty-hint" class="text-sm text-slate-500 text-center py-4">Noch keine Felder — füge unten eins hinzu.</p>
+      </section>
+
+      <!-- Neues Feld hinzufügen -->
+      <section class="card rounded-2xl p-5 sm:p-6 flex flex-col gap-4">
+        <h2 class="font-display font-semibold text-sm tracking-wide text-brand-light uppercase">Feld hinzufügen</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5">Label</label>
+            <input id="new-label" class="field-input w-full rounded-lg px-3.5 py-2.5 text-sm" type="text" placeholder="z. B. Discord-Username">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5">Typ</label>
+            <select id="new-type" class="field-input w-full rounded-lg px-3.5 py-2.5 text-sm">
+              <option value="text">Text</option>
+              <option value="textarea">Textbereich</option>
+              <option value="email">E-Mail</option>
+              <option value="tel">Telefon</option>
+              <option value="number">Zahl</option>
+              <option value="date">Datum</option>
+              <option value="select">Auswahl (Dropdown)</option>
+              <option value="radio">Einzelauswahl (Radio)</option>
+              <option value="checkbox">Mehrfachauswahl (Checkbox)</option>
+            </select>
+          </div>
+        </div>
+        <div id="new-options-wrap" class="hidden">
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">Optionen (kommagetrennt)</label>
+          <input id="new-options" class="field-input w-full rounded-lg px-3.5 py-2.5 text-sm" type="text" placeholder="Option A, Option B, Option C">
+        </div>
+        <div id="new-placeholder-wrap">
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">Platzhaltertext (optional)</label>
+          <input id="new-placeholder" class="field-input w-full rounded-lg px-3.5 py-2.5 text-sm" type="text">
+        </div>
+        <label class="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+          <input id="new-required" type="checkbox" class="w-4 h-4 rounded">
+          Pflichtfeld
+        </label>
+        <button id="add-field-btn" class="w-full bg-brand hover:bg-brand-light transition-colors text-white font-display font-semibold rounded-lg py-2.5">
+          + Feld hinzufügen
+        </button>
+      </section>
+    </div>
+
+    <!-- ===== Rechte Spalte: Live-Vorschau ===== -->
+    <div class="lg:sticky lg:top-24 self-start flex flex-col gap-4">
+      <h2 class="font-display font-semibold text-sm tracking-wide text-brand-light uppercase px-1">Live-Vorschau</h2>
+      <div class="card rounded-2xl p-5 sm:p-8 flex flex-col gap-5 max-h-[75vh] overflow-y-auto">
+        <div>
+          <h3 id="preview-title" class="font-display font-semibold text-2xl"></h3>
+          <p id="preview-description" class="text-slate-400 text-sm mt-2"></p>
+        </div>
+        <div id="preview-fields" class="flex flex-col gap-5"></div>
+        <button disabled class="w-full bg-brand/60 text-white font-display font-semibold rounded-lg py-3 cursor-not-allowed" id="preview-submit"></button>
+      </div>
+      <p class="text-xs text-slate-500 font-mono px-1">Vorschau nur zur Ansicht — nicht funktional.</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ============ Zustand ============
+  let config = {
+    title: 'Bewerbung — LS Elyntara & Projekte',
+    description: 'Du willst Teil des Netzwerks werden? Erzähl uns, wer du bist und wo du mitwirken möchtest.',
+    submitLabel: 'Bewerbung absenden',
+    successMessage: 'Danke für deine Bewerbung! Wir melden uns so schnell wie möglich bei dir.',
+    fields: []
+  };
+
+  const TYPE_LABELS = {
+    text: 'Text', textarea: 'Textbereich', email: 'E-Mail', tel: 'Telefon',
+    number: 'Zahl', date: 'Datum', select: 'Dropdown', radio: 'Radio', checkbox: 'Checkbox'
+  };
+  const OPTION_TYPES = ['select', 'radio', 'checkbox'];
+
+  function slugify(str) {
+    return str.toLowerCase()
+      .replace(/[äöüß]/g, c => ({ ä: 'ae', ö: 'oe', ü: 'ue', ß: 'ss' }[c]))
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '') || 'feld';
+  }
+
+  function uniqueId(base) {
+    let id = base, n = 1;
+    while (config.fields.some(f => f.id === id)) { id = `${base}_${n++}`; }
+    return id;
+  }
+
+  // ============ Versuche gespeicherte config.json zu laden ============
+  async function tryLoadExisting() {
+    try {
+      const res = await fetch('form-config.json', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.fields)) config = data;
+      }
+    } catch (e) { /* ignore — keine bestehende Datei gefunden, Standardwerte bleiben */ }
+    hydrateGeneralInputs();
+    renderAll();
+  }
+
+  function hydrateGeneralInputs() {
+    document.getElementById('cfg-title').value = config.title || '';
+    document.getElementById('cfg-description').value = config.description || '';
+    document.getElementById('cfg-submitLabel').value = config.submitLabel || '';
+    document.getElementById('cfg-successMessage').value = config.successMessage || '';
+  }
+
+  ['cfg-title', 'cfg-description', 'cfg-submitLabel', 'cfg-successMessage'].forEach(id => {
+    document.getElementById(id).addEventListener('input', (e) => {
+      const key = id.replace('cfg-', '');
+      config[key] = e.target.value;
+      renderPreview();
+    });
+  });
+
+  // ============ Feld hinzufügen ============
+  const newTypeEl = document.getElementById('new-type');
+  newTypeEl.addEventListener('change', () => {
+    document.getElementById('new-options-wrap').classList.toggle('hidden', !OPTION_TYPES.includes(newTypeEl.value));
+    document.getElementById('new-placeholder-wrap').classList.toggle('hidden', OPTION_TYPES.includes(newTypeEl.value) || newTypeEl.value === 'date');
+  });
+
+  document.getElementById('add-field-btn').addEventListener('click', () => {
+    const label = document.getElementById('new-label').value.trim();
+    const type = newTypeEl.value;
+    const required = document.getElementById('new-required').checked;
+    const placeholder = document.getElementById('new-placeholder').value.trim();
+    const optionsRaw = document.getElementById('new-options').value.trim();
+
+    if (!label) { document.getElementById('new-label').focus(); return; }
+    if (OPTION_TYPES.includes(type) && !optionsRaw) { document.getElementById('new-options').focus(); return; }
+
+    const field = {
+      id: uniqueId(slugify(label)),
+      label, type, required
+    };
+    if (placeholder && !OPTION_TYPES.includes(type)) field.placeholder = placeholder;
+    if (OPTION_TYPES.includes(type)) {
+      field.options = optionsRaw.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    config.fields.push(field);
+
+    document.getElementById('new-label').value = '';
+    document.getElementById('new-placeholder').value = '';
+    document.getElementById('new-options').value = '';
+    document.getElementById('new-required').checked = false;
+
+    renderAll();
+  });
+
+  // ============ Felderliste rendern ============
+  function moveField(index, dir) {
+    const target = index + dir;
+    if (target < 0 || target >= config.fields.length) return;
+    [config.fields[index], config.fields[target]] = [config.fields[target], config.fields[index]];
+    renderAll();
+  }
+
+  function removeField(index) {
+    config.fields.splice(index, 1);
+    renderAll();
+  }
+
+  function toggleRequired(index) {
+    config.fields[index].required = !config.fields[index].required;
+    renderAll();
+  }
+
+  function renderFieldsList() {
+    const list = document.getElementById('fields-list');
+    list.innerHTML = '';
+    document.getElementById('field-count').textContent = `${config.fields.length} Feld${config.fields.length === 1 ? '' : 'er'}`;
+    document.getElementById('empty-hint').classList.toggle('hidden', config.fields.length > 0);
+
+    config.fields.forEach((f, i) => {
+      const row = document.createElement('div');
+      row.className = 'flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.02] px-4 py-3';
+      row.innerHTML = `
+        <div class="flex flex-col gap-0.5 shrink-0">
+          <button data-act="up" class="text-slate-500 hover:text-brand-light disabled:opacity-20 text-xs leading-none px-1" ${i === 0 ? 'disabled' : ''}>▲</button>
+          <button data-act="down" class="text-slate-500 hover:text-brand-light disabled:opacity-20 text-xs leading-none px-1" ${i === config.fields.length - 1 ? 'disabled' : ''}>▼</button>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-white truncate">${escapeHtml(f.label)}${f.required ? ' <span class="text-brand-light">*</span>' : ''}</p>
+          <p class="font-mono text-[11px] text-slate-500">${TYPE_LABELS[f.type] || f.type} · id: ${f.id}${f.options ? ' · ' + f.options.length + ' Optionen' : ''}</p>
+        </div>
+        <button data-act="required" class="font-mono text-[10px] px-2 py-1 rounded border ${f.required ? 'border-brand text-brand-light' : 'border-white/15 text-slate-500'}">Pflicht</button>
+        <button data-act="delete" class="text-slate-500 hover:text-red-400 px-1" aria-label="Feld löschen">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      `;
+      row.querySelector('[data-act="up"]').addEventListener('click', () => moveField(i, -1));
+      row.querySelector('[data-act="down"]').addEventListener('click', () => moveField(i, 1));
+      row.querySelector('[data-act="required"]').addEventListener('click', () => toggleRequired(i));
+      row.querySelector('[data-act="delete"]').addEventListener('click', () => removeField(i));
+      list.appendChild(row);
+    });
+  }
+
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  // ============ Vorschau rendern (nutzt gleiche Logik wie bewerbung.html) ============
+  function el(tag, attrs = {}, children = []) {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (k === 'class') e.className = v;
+      else if (k === 'text') e.textContent = v;
+      else e.setAttribute(k, v);
+    }
+    for (const c of children) e.appendChild(c);
+    return e;
+  }
+
+  function renderPreviewField(field) {
+    const wrap = el('div', {});
+    const labelText = field.label + (field.required ? ' *' : '');
+
+    if (field.type === 'textarea') {
+      wrap.appendChild(el('label', { class: 'block text-sm font-medium text-slate-300 mb-2', text: labelText }));
+      wrap.appendChild(el('textarea', { rows: '3', placeholder: field.placeholder || '', class: 'field-input w-full rounded-lg px-4 py-3 text-sm resize-none', disabled: 'disabled' }));
+    } else if (field.type === 'select') {
+      wrap.appendChild(el('label', { class: 'block text-sm font-medium text-slate-300 mb-2', text: labelText }));
+      const select = el('select', { class: 'field-input w-full rounded-lg px-4 py-3 text-sm', disabled: 'disabled' });
+      select.appendChild(el('option', { text: 'Bitte wählen …' }));
+      (field.options || []).forEach(opt => select.appendChild(el('option', { text: opt })));
+      wrap.appendChild(select);
+    } else if (field.type === 'radio' || field.type === 'checkbox') {
+      wrap.appendChild(el('span', { class: 'block text-sm font-medium text-slate-300 mb-2', text: labelText }));
+      const group = el('div', { class: 'flex flex-wrap gap-2' });
+      (field.options || []).forEach(opt => {
+        const optWrap = el('label', { class: 'field-input flex items-center gap-2 rounded-lg px-3.5 py-2.5 text-sm text-slate-300' });
+        optWrap.appendChild(el('input', { type: field.type, disabled: 'disabled' }));
+        optWrap.appendChild(document.createTextNode(opt));
+        group.appendChild(optWrap);
+      });
+      wrap.appendChild(group);
+    } else {
+      wrap.appendChild(el('label', { class: 'block text-sm font-medium text-slate-300 mb-2', text: labelText }));
+      wrap.appendChild(el('input', { type: field.type || 'text', placeholder: field.placeholder || '', class: 'field-input w-full rounded-lg px-4 py-3 text-sm', disabled: 'disabled' }));
+    }
+    return wrap;
+  }
+
+  function renderPreview() {
+    document.getElementById('preview-title').textContent = config.title || '';
+    document.getElementById('preview-description').textContent = config.description || '';
+    document.getElementById('preview-submit').textContent = config.submitLabel || 'Absenden';
+    const container = document.getElementById('preview-fields');
+    container.innerHTML = '';
+    config.fields.forEach(f => container.appendChild(renderPreviewField(f)));
+  }
+
+  function renderAll() {
+    renderFieldsList();
+    renderPreview();
+  }
+
+  // ============ Export / Import / Copy ============
+  document.getElementById('export-btn').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'form-config.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('copy-btn').addEventListener('click', async () => {
+    await navigator.clipboard.writeText(JSON.stringify(config, null, 2));
+    const btn = document.getElementById('copy-btn');
+    const original = btn.textContent;
+    btn.textContent = 'Kopiert ✓';
+    setTimeout(() => btn.textContent = original, 1500);
+  });
+
+  document.getElementById('import-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (!Array.isArray(data.fields)) throw new Error('Ungültiges Format: "fields" fehlt');
+        config = data;
+        hydrateGeneralInputs();
+        renderAll();
+      } catch (err) {
+        alert('Import fehlgeschlagen: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  // ============ Init ============
+  newTypeEl.dispatchEvent(new Event('change'));
+  tryLoadExisting();
+</script>
+
+</body>
+</html>
